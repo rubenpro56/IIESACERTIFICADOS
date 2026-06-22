@@ -3,42 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor de Documentos</title>
+    <title>Abriendo Documento...</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background-color: #f4f4f9; }
-        .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; color: #333; }
-        .error-icon { font-size: 50px; margin-bottom: 10px; }
-        .debug-info { margin-top: 15px; padding: 10px; background: #eee; border-radius: 5px; font-family: monospace; font-size: 12px; }
-        iframe { width: 100%; height: 100%; border: none; }
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .boton-manual {
+            display: none;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
-    <div id="app" style="width: 100%; height: 100%;"></div>
+    <div id="loader" class="loader"></div>
+    <h2 id="mensaje">Buscando tu documento...</h2>
+    <p id="submensaje">Por favor, espera un momento.</p>
+    
+    <!-- Botón de emergencia si falla la redirección automática -->
+    <a id="enlace-manual" class="boton-manual" href="#">Abrir documento manualmente</a>
 
     <script>
-        // 1. Obtener el parámetro 'doc' de la URL de forma exacta
+        // 1. Obtener el nombre del archivo desde la URL del QR (?doc=nombredelarchivo)
         const params = new URLSearchParams(window.location.search);
         const archivoPDF = params.get('doc'); 
 
-        const contenedor = document.getElementById('app');
+        const mensaje = document.getElementById('mensaje');
+        const submensaje = document.getElementById('submensaje');
+        const loader = document.getElementById('loader');
+        const botonManual = document.getElementById('enlace-manual');
 
         if (archivoPDF) {
-            // Buscamos el archivo respetando el nombre exacto que envías en el QR
-            const rutaCompleta = `./pdfs/${archivoPDF}.pdf`;
+            // Construimos la ruta directa al archivo PDF
+            const rutaDestino = `./pdfs/${archivoPDF}.pdf`;
 
-            // 2. Insertar el visor
-            contenedor.innerHTML = `<iframe src="${rutaCompleta}"></iframe>`;
+            // Redirigir de inmediato al PDF para que el celular lo abra de forma nativa
+            window.location.href = rutaDestino;
+
+            // En celulares, por si la redirección automática se congela, activamos un plan B a los 2 segundos:
+            setTimeout(() => {
+                mensaje.innerText = "Casi listo";
+                submensaje.innerText = "Si el documento no se abrió automáticamente, presiona el botón de abajo:";
+                loader.style.display = "none";
+                botonManual.href = rutaDestino;
+                botonManual.style.display = "inline-block";
+            }, 2000);
+
         } else {
-            contenedor.innerHTML = `
-                <div class="error-container">
-                    <div class="error-icon">⚠️</div>
-                    <h2>Documento no especificado</h2>
-                    <p>El enlace del código QR no contiene un identificador.</p>
-                    <div class="debug-info">URL detectada: ${window.location.href}</div>
-                </div>
-            `;
+            // Mensaje si escanean un QR mal configurado
+            loader.style.display = "none";
+            mensaje.innerText = "⚠️ Enlace Inválido";
+            submensaje.innerText = "El código QR escaneado no contiene la información de ningún documento.";
         }
     </script>
 </body>
