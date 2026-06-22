@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Documentos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background-color: #f4f4f9; }
+        .error-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; }
+        .error-icon { font-size: 50px; margin-bottom: 10px; }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+
+    <div id="app" style="width: 100%; height: 100%;">
+        <!-- El PDF se cargará aquí dentro -->
+    </div>
+
+    <script>
+        // 1. Leer el nombre del archivo PDF desde la URL de la barra de direcciones
+        const params = new URLSearchParams(window.location.search);
+        const archivoPDF = params.get('doc'); // Espera algo como ?doc=factura123
+
+        const contenedor = document.getElementById('app');
+
+        if (archivoPDF) {
+            // Limpiar el nombre del archivo por seguridad y asegurar la extensión .pdf
+            const nombreLimpio = archivoPDF.replace(/[^a-zA-Z0-9-_]/g, '');
+            const rutaCompleta = `./pdfs/${nombreLimpio}.pdf`;
+
+            // 2. Insertar un visor de PDF (iframe) adaptado a pantallas móviles
+            contenedor.innerHTML = `<iframe src="${rutaCompleta}"></iframe>`;
+        } else {
+            // Mostrar un error amigable si el enlace está incompleto
+            contenedor.innerHTML = `
+                <div class="error-container">
+                    <div class="error-icon">⚠️</div>
+                    <h2>Documento no especificado</h2>
+                    <p>El código QR escaneado no contiene un identificador válido.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
